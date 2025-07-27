@@ -1,14 +1,14 @@
-# LJ Room Teleport Plugin
+# LJ Room TP
 
 This plugin allows players to teleport to a predefined "LJ room" location for each map, useful for KZ or GOKZ jump training servers.
 
-## 🛠 Installation
+## Installation
 
 1. Compile `kzlj.sp` and upload the resulting `.smx` file to `addons/sourcemod/plugins/`
 2. Upload  `ljroom.csv` to `addons/sourcemod/configs/ljroom.csv`
 3. Open `addons/sourcemod/configs/databases.cfg`
 
-### ✅ If you're using SQLite
+### If you're using SQLite
 
 Make sure your `"default"` section looks like this:
 
@@ -33,15 +33,14 @@ Make sure your `"default"` section looks like this:
 	}
 ```
 
-### ✅ If you're using MySQL
+### If you're using MySQL
 
 Make sure you have configured `"default"` database
 
-## ⚠️ First-Time Load Notice
 
-The first time someone joins the server after installing this plugin, the server might lag briefly.
+> ⚠️ The first time someone joins the server after installing this plugin, the server might lag briefly.
  This is normal — the plugin performs bulk database writes when importing LJ room data from the CSV file.
 
-## 🧠 Credits
+## Credits
 
 - Original plugin author: **Evan**
