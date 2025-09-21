@@ -14,7 +14,7 @@ public Plugin myinfo =
     name        = "gokz-ljroom-tp",
     author      = "Evan (modified by Cinyan10)",
     description = "Teleport players to predefined LJ room positions stored in GOKZ DB",
-    version     = "2.2",
+    version     = "2.3",
     url         = ""
 };
 
@@ -196,11 +196,69 @@ void DB_EnsureTables()
             UNIQUE KEY uniq_map (map_name) \
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
     );
-    SQL_TQuery(gH_DB, DB_Generic_CB, createSql);
+    SQL_TQuery(gH_DB, DB_CreateTable_CB, createSql);
 }
 
-public void DB_Generic_CB(Database db, DBResultSet results, const char[] error, any data)
+public void DB_CreateTable_CB(Database db, DBResultSet results, const char[] error, any data)
 {
     if (error[0])
-        LogError("[LJRoom] DB error: %s", error);
+    {
+        LogError("[LJRoom] Failed to ensure table: %s", error);
+        return;
+    }
+
+    // Import CSV only when table is first created
+    ImportLJRoomData();
+}
+
+void ImportLJRoomData()
+{
+    char path[PLATFORM_MAX_PATH];
+    BuildPath(Path_SM, path, sizeof(path), "configs/ljroom.csv");
+
+    File file = OpenFile(path, "r");
+    if (file == null)
+    {
+        LogError("[LJRoom] Failed to open ljroom.csv for import.");
+        return;
+    }
+
+    char line[256];
+    bool isFirstLine = true;
+    while (!IsEndOfFile(file) && ReadFileLine(file, line, sizeof(line)))
+    {
+        TrimString(line);
+        if (isFirstLine) // skip header
+        {
+            isFirstLine = false;
+            continue;
+        }
+
+        char data[6][64];
+        ExplodeString(line, ",", data, sizeof(data), sizeof(data[]));
+        if (strlen(data[0]) < 1) continue;
+
+        StripQuotes(data[0]);
+        for (int i = 1; i < 6; i++)
+            StripQuotes(data[i]);
+
+        char query[512];
+        FormatEx(query, sizeof(query),
+            "INSERT INTO LJRooms (map_name,x,y,z,pitch,yaw) \
+             VALUES ('%s', %s, %s, %s, %s, %s) \
+             ON DUPLICATE KEY UPDATE \
+                x=VALUES(x), y=VALUES(y), z=VALUES(z), pitch=VALUES(pitch), yaw=VALUES(yaw);",
+            data[0], data[1], data[2], data[3], data[4], data[5]);
+
+        SQL_TQuery(gH_DB, DB_Import_Callback, query);
+    }
+    CloseHandle(file);
+}
+
+public void DB_Import_Callback(Database db, DBResultSet results, const char[] error, any data)
+{
+    if (error[0])
+    {
+        LogError("[LJRoom] Import failed: %s", error);
+    }
 }
