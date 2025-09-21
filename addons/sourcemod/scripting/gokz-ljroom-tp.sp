@@ -77,7 +77,9 @@ public Action Command_LJ(int client, int args)
 
 public Action Command_SetLJ(int client, int args)
 {
-    if (!IsValidClient(client)) return Plugin_Handled;
+    if (!IsValidClient(client)) 
+        return Plugin_Handled;
+
     if (gH_DB == null)
     {
         GOKZ_PrintToChat(client, true, "{red}The database is not ready yet. Please try again later.");
@@ -87,6 +89,26 @@ public Action Command_SetLJ(int client, int args)
     float origin[3], angles[3];
     GetEntPropVector(client, Prop_Send, "m_vecOrigin", origin);
     GetClientEyeAngles(client, angles);
+
+    // --- Force horizontal pitch and snap yaw ---
+    float yaw = angles[1];
+
+    // Normalize yaw to [0, 360)
+    while (yaw < 0.0)  yaw += 360.0;
+    while (yaw >= 360.0) yaw -= 360.0;
+
+    // Round to nearest 90°
+    int quadrant = RoundToNearest(yaw / 90.0);
+    float snappedYaw = float(quadrant * 90);
+
+    // Keep snapped yaw within [0, 360)
+    while (snappedYaw >= 360.0) snappedYaw -= 360.0;
+    while (snappedYaw < 0.0)    snappedYaw += 360.0;
+
+    // Overwrite angles
+    angles[0] = 0.0;           // pitch always horizontal
+    angles[1] = snappedYaw;    // yaw snapped to N/S/E/W
+    angles[2] = 0.0;           // roll always 0
 
     char query[512];
     FormatEx(query, sizeof(query),
@@ -98,6 +120,7 @@ public Action Command_SetLJ(int client, int args)
     SQL_TQuery(gH_DB, SQL_SetLJ_Callback, query, GetClientUserId(client));
     return Plugin_Handled;
 }
+
 
 public Action Command_DeleteLJ(int client, int args)
 {
