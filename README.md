@@ -4,4 +4,4 @@ This plugin allows players to teleport to a predefined "LJ room" location for ea
 
 ## Credits
 
-- Original plugin author: **Evan**
+- Original plugin author: [Evan](https://github.com/EvanIMK/KZ-LJ-Teleport)
