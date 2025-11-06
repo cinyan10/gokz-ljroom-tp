@@ -62,6 +62,11 @@ public Action Timer_RetryDB(Handle timer)
 public Action Command_LJ(int client, int args)
 {
     if (!IsValidClient(client)) return Plugin_Handled;
+    if (GOKZ_GetTimerRunning(client))
+    {
+        GOKZ_PrintToChat(client, true, "{red}You cannot teleport to the LJ room while your timer is running.");
+        return Plugin_Handled;
+    }
     if (gH_DB == null)
     {
         GOKZ_PrintToChat(client, true, "{red}The database is not ready yet. Please try again later.");
@@ -193,6 +198,12 @@ public void SQL_GetLJ_Callback(Database db, DBResultSet results, const char[] er
     angles[0] = results.FetchFloat(3);
     angles[1] = results.FetchFloat(4);
     angles[2] = 0.0;
+
+    // Stop timer before teleporting
+    if (GOKZ_GetTimerRunning(client))
+    {
+        GOKZ_StopTimer(client, true);
+    }
 
     TeleportEntity(client, origin, angles, NULL_VECTOR);
     GOKZ_PrintToChat(client, true, "{lime}Teleported to LJ room.");
